@@ -1,0 +1,47 @@
+---
+title: "Ames Housing Prices Prediction Model"
+format: html
+editor: visual
+---
+# Packages
+```{r}
+library(ggplot2)
+```
+
+# Load in Data
+```{r}
+train <- read.csv('train.csv')
+```
+
+# Data Processing
+## Data Cleaning
+Let's take a look at which variables have NA values
+```{r}
+sapply(names(train), function(col_name) {
+  sum(is.na(train[col_name]))
+})
+```
+
+```{r}
+train_clean <- train
+train_clean$LotFrontage[is.na(train_clean$LotFrontage)] <- 0 # NAs likely just houses with no street access
+train_clean$Alley[is.na(train_clean$Alley)] <- 'NoAlley' # NAs likely just houses with no alley
+train_clean <- train_clean[!is.na(train_clean$MasVnrType),] # Only 8 NAs, best to remove
+train_clean <- train_clean[!is.na(train_clean$MasVnrArea),] # Only 8 NAs, best to remove
+train_clean[train_clean$TotalBsmtSF == 0, c('BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2')] <- 'NoBsmt' # Most NAs when TotalBsmtSF == 0
+train_clean <- train_clean[!is.na(train_clean$BsmtExposure),] # 1 NA left, best to remove
+train_clean <- train_clean[!is.na(train_clean$BsmtFinType2),] # 1 NA left, best to remove
+train_clean <- train_clean[!is.na(train_clean$Electrical),] # Only 1 NA, best to remove
+train_clean[train_clean$Fireplaces == 0, 'FireplaceQu'] <- 'NoFrplc' # Most NAs when Fireplaces == 0
+train_clean[train_clean$GarageArea == 0, c('GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageQual', 'GarageCond')] <- 'NoGarage' # All NAs when GarageArea == 0
+train_clean[train_clean$PoolArea == 0, 'PoolQC'] <- 'NoPool' # All NAs when PoolArea == 0
+train_clean$Fence[is.na(train_clean$Fence)] <- 'NoFence' # Likely NAs are houses with no fence
+train_clean$MiscFeature[is.na(train_clean$MiscFeature)] <- 'NoMisc' # All NAs when MiscVal == 0
+
+sapply(names(train_clean), function(col_name) {
+  sum(is.na(train_clean[col_name]))
+})
+```
+
+
+
