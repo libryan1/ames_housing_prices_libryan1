@@ -3,19 +3,33 @@ title: "Ames Housing Prices Prediction Model"
 format: html
 editor: visual
 ---
+
 # Packages
+
 ```{r}
 library(ggplot2)
+library(dplyr)
+library(caret)
+library(recipes)
+library(stringr)
+library(leaps)
+library(ggcorrplot)
+library(glmnet)
+library(tidyr)
 ```
 
 # Load in Data
+
 ```{r}
 train <- read.csv('train.csv')
 ```
 
 # Data Processing
+
 ## Data Cleaning
+
 Let's take a look at which variables have NA values
+
 ```{r}
 sapply(names(train), function(col_name) {
   sum(is.na(train[col_name]))
@@ -24,6 +38,7 @@ sapply(names(train), function(col_name) {
 
 ```{r}
 train_clean <- train
+train_clean$Id <- NULL # Remove Id
 train_clean$LotFrontage[is.na(train_clean$LotFrontage)] <- 0 # NAs likely just houses with no street access
 train_clean$Alley[is.na(train_clean$Alley)] <- 'NoAlley' # NAs likely just houses with no alley
 train_clean <- train_clean[!is.na(train_clean$MasVnrType),] # Only 8 NAs, best to remove
@@ -34,6 +49,7 @@ train_clean <- train_clean[!is.na(train_clean$BsmtFinType2),] # 1 NA left, best 
 train_clean <- train_clean[!is.na(train_clean$Electrical),] # Only 1 NA, best to remove
 train_clean[train_clean$Fireplaces == 0, 'FireplaceQu'] <- 'NoFrplc' # Most NAs when Fireplaces == 0
 train_clean[train_clean$GarageArea == 0, c('GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageQual', 'GarageCond')] <- 'NoGarage' # All NAs when GarageArea == 0
+train_clean$GarageYrBlt <- NULL # Quantitative variable with NAs, just remove
 train_clean[train_clean$PoolArea == 0, 'PoolQC'] <- 'NoPool' # All NAs when PoolArea == 0
 train_clean$Fence[is.na(train_clean$Fence)] <- 'NoFence' # Likely NAs are houses with no fence
 train_clean$MiscFeature[is.na(train_clean$MiscFeature)] <- 'NoMisc' # All NAs when MiscVal == 0
@@ -43,5 +59,339 @@ sapply(names(train_clean), function(col_name) {
 })
 ```
 
+## Data Formatting
 
+Let's factor the categorical data
+
+```{r}
+cat_vars <- c('MSSubClass', 'MSZoning', 'Street', 'Alley', 'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope', 'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle', 'RoofStyle', 'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2', 'Heating', 'HeatingQC', 'CentralAir', 'Electrical', 'KitchenQual', 'Functional', 'FireplaceQu', 'GarageType', 'GarageFinish', 'GarageQual', 'GarageCond', 'PavedDrive', 'PoolQC', 'Fence', 'MiscFeature', 'MoSold', 'SaleType', 'SaleCondition')
+train_form <- train_clean %>%
+  mutate(across(all_of(cat_vars), factor))
+```
+
+Convert SalePrice to its log to conform with Kaggle competition
+```{r}
+train_form$SalePrice <- log(train_form$SalePrice)
+```
+
+
+# Linear Regression
+
+## Fit Linear Regression Model
+
+### p Selection via Cross Validation
+
+Proceed with 10-fold forward stepwise selection cross validation to determine optimal number of predictors.
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+set.seed(1)
+rec <- recipe(SalePrice ~ ., data = train_form) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) 
+
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 5,
+  returnResamp = 'all'
+)
+
+grid <- expand.grid(nvmax = 1:250)
+
+linreg_cv_p <- train(
+  rec,
+  data = train_form,
+  method = 'leapForward',
+  trControl = ctrl,
+  tuneGrid = grid,
+  metric = 'RMSE'
+)
+```
+
+```{r, fig.width=10, fig.height=3}
+df <- linreg_cv_p$resample %>%
+  mutate(rep = str_split_i(Resample, '\\.', 2)) %>%
+  group_by(rep, nvmax) %>%
+  summarise(mean_rmse = mean(RMSE))
+
+ggplot(df, aes(x = nvmax, y = mean_rmse)) + 
+  geom_line() +
+  facet_grid(.~rep) +
+  labs(x = 'Predictors', y = 'RMSE', title = 'Results of 5 Iterations of Forward Stepwise 10-Fold CV')
+```
+
+A local minimum appears fairly frequently around p = 75.  p = 100 is another hot spot, as well as p = 175 and p = 200.
+
+### Cross Validation RMSE
+
+```{r message=FALSE, warning=FALSE}
+best_p <- linreg_cv_p$bestTune[[1]]
+
+set.seed(2)
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 10,
+  returnResamp = 'all'
+)
+
+grid <- expand.grid(nvmax = c(75, 100, 175, 200, best_p))
+
+linreg_cv_rmse <- train(
+  rec,
+  data = train_form,
+  method = 'leapForward',
+  trControl = ctrl,
+  tuneGrid = grid,
+  metric = 'RMSE'
+)
+```
+
+```{r}
+df <- linreg_cv_rmse$resample %>%
+  mutate(rep = str_split_i(Resample, '\\.', 2)) %>%
+  group_by(rep, nvmax) %>%
+  summarise(mean_rmse = mean(RMSE))
+
+ggplot(df, aes(x = factor(nvmax), y = mean_rmse)) +
+  geom_boxplot() + 
+  labs(x = 'Number of Predictors', title = 'Distributions of CV RMSE by Predictor Count')
+
+linreg_cv_rmse_stats <- df %>%
+  group_by(nvmax) %>%
+  summarise(
+    mean_RMSE = mean(mean_rmse),
+    med_RMSE = median(mean_rmse),
+    sd_RMSE = sd(mean_rmse),
+    IQR_RMSE = IQR(mean_rmse)
+    )
+linreg_cv_rmse_stats
+```
+
+Caret determined p = 177 as the optimal number of predictors.  That does indeed seem to be the case, it has the lowest median RMSE and IQR.  p = 175 is slightly better with regards to mean and standard deviation, but due to the presence of rather extreme outliers in both, the one superior in the robust statistics is preferred.  It should be noted though, that the differences between p = 175 and p = 177 in CV RMSE and model interpretability are practically negligible.
+
+### Model Diagnostics
+
+```{r}
+prep <- prep(rec, training = train_form)
+lm_df <- bake(prep, new_data = NULL)
+i <- linreg_cv_rmse$bestTune$nvmax
+preds <- names(coef(linreg_cv_rmse$finalModel, id = i))[-1]
+eq <- reformulate(
+  termlabels = preds,
+  response = "SalePrice"
+)
+
+final_lm <- lm(eq, data = lm_df)
+
+plot(final_lm)
+```
+
+From residuals vs fitted and scale-location plots heteroscedasticity does not seem to be a problem. No strange patterns emerge.  Per the QQ plot the vast majority of residuals conform to a normal distribution. Point 1289 is a high-leverage point with a > 1 Cook's distance.  Let's see if its removal improves improves predictive accuracy.
+
+### Multicollinearity Analysis
+```{r}
+i <- names(train_form) %in% names(coef(final_lm, 177))
+num_preds <- names(train_form)[i]
+train_num <- train_form[num_preds]
+cor_mat <- cor(train_num, use = "pairwise.complete.obs")
+ggcorrplot(cor_mat, colors = c('red', 'white', 'blue')) +
+  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = -.025), 
+        axis.text.y = element_text(size = 10)) + 
+  labs(title = 'Correlation Heatmap')
+
+abs(cor_mat) > .8
+```
+
+```{r}
+cor(train_form$X1stFlrSF, train_form$TotalBsmtSF)
+cor(train_form$GarageArea, train_form$GarageCars)
+```
+
+
+1stFlrSF and TotalBsmtSF, GarageArea and GarageCars both have fairly high correlation, at 0.8213 and 0.8823 respectively.
+
+```{r}
+ggplot(train_form, aes(x = X1stFlrSF, y = SalePrice)) + 
+  geom_point() +
+  labs(title = 'SalePrice vs 1stFlrSF', x = '1stFlrSF')
+ggplot(train_form, aes(x = TotalBsmtSF, y = SalePrice)) + 
+  geom_point() +
+  labs(title = 'SalePrice vs TotalBsmtSF')
+cor(train_form$X1stFlrSF, train_form$SalePrice)
+cor(train_form$TotalBsmtSF, train_form$SalePrice)
+
+ggplot(train_form, aes(x = GarageArea, y = SalePrice)) + 
+  geom_point() +
+  labs(title = 'SalePrice vs GarageArea', x = '1stFlrSF')
+ggplot(train_form, aes(x = GarageCars, y = SalePrice)) + 
+  geom_point() +
+  labs(title = 'SalePrice vs GarageCars')
+cor(train_form$GarageArea, train_form$SalePrice)
+cor(train_form$GarageCars, train_form$SalePrice)
+```
+
+TotalBsmtSF has marginally higher correlation with SalePrice than 1stFlrSF.  Both variables have approximately linear relationships with log(SalePrice).  A second model will be fit with 1stFlrSF omitted to see if that improves CV RMSE.
+
+GarageCars has marginally higher correlation with SalePrice than GarageArea.  Both have approximately linear relationships with log(SalePrice).  The second model will omit GarageCars to see if that improves CV RMSE.
+
+### Quantitative Predictor Analysis
+```{r, fig.width=15, fig.height=15}
+i <- !(names(train_form) %in% c(cat_vars, 'SalePrice'))
+quant_vars <- names(train_form)[i]
+train_pivot <- train_form %>%
+  pivot_longer(cols = all_of(c(quant_vars)),
+               names_to = 'Predictor',
+               values_to = 'Value')
+ggplot(train_pivot, aes(x = Value, y = SalePrice)) +
+  geom_point() +
+  facet_wrap(. ~ Predictor, scales = 'free_x') +
+  labs(title = 'SalePrice vs All Quantitative Predictors')
+```
+
+Let's see if log transforming the predictors makes their relationships with log(SalePrice) more linear.
+
+```{r, fig.width=15, fig.height=15}
+train_quant <- train_form[quant_vars]
+train_quant_trans <- mutate(train_quant, across(everything(), log1p))
+train_quant_trans$SalePrice <- train_form$SalePrice
+train_pivot <- train_quant_trans %>%
+  pivot_longer(cols = all_of(quant_vars),
+               names_to = 'Predictor',
+               values_to = 'Value')
+ggplot(train_pivot, aes(x = Value, y = SalePrice)) +
+  geom_point() +
+  facet_wrap(. ~ Predictor, scales = 'free_x') +
+  labs(title = 'SalePrice vs Log of All Quantitative Predictors')
+
+sapply(quant_vars, function(x) {
+  corr <- cor(train_quant[x], train_form$SalePrice)
+  log_corr <- cor(train_quant_trans[x], train_form$SalePrice)
+  return(c(corr, log_corr))
+})
+```
+
+LotArea and OpenPorchSF saw a noticeable increase in correlation with SalePrice after being log-transformed.  Apprearencewise, both LotArea's and OpenPorchSF's outliers are reduced in how extreme they are.  This does make them look more linear, though it can be hard to spot due to how sparse these outliers are.  Note how with the outliers, the relationship looks akin to a logarithmic relationship, where after a certain point further increases in LotArea/OpenPorchSF do not increase SalePrice as much as it did before.  After the log-transform, that pattern is much reduced.
+
+## Refined Linear Regression Model
+
+This model is a refined version of the first linear regression model.  Conforming it better to the assumptions of linear regression by removing a high-leverage point and log-transforming LotArea and OpenPorchSF which makes their relationship with SalePrice more linear.
+
+```{r}
+train_ref <- train_form
+train_ref$LotArea <- log1p(train_ref$LotArea)
+train_ref$OpenPorchSF <- log1p(train_ref$OpenPorchSF)
+train_ref$X1stFlrSF <- NULL
+train_ref$GarageCars <- NULL
+train_ref[-1289, ]
+```
+
+### p selection via Cross Validation
+```{r message=FALSE, warning=FALSE}
+set.seed(3)
+rec <- recipe(SalePrice ~ ., data = train_ref) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) 
+
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 5,
+  returnResamp = 'all'
+)
+
+grid <- expand.grid(nvmax = 1:250)
+
+linreg_cv_p2 <- train(
+  rec,
+  data = train_ref,
+  method = 'leapForward',
+  trControl = ctrl,
+  tuneGrid = grid,
+  metric = 'RMSE'
+)
+```
+
+```{r, fig.width=10, fig.height=3}
+df <- linreg_cv_p2$resample %>%
+  mutate(rep = str_split_i(Resample, '\\.', 2)) %>%
+  group_by(rep, nvmax) %>%
+  summarise(mean_rmse = mean(RMSE))
+
+ggplot(df, aes(x = nvmax, y = mean_rmse)) + 
+  geom_line() +
+  facet_grid(.~rep) +
+  labs(x = 'Predictors', y = 'RMSE', title = 'Results of 5 Iterations of Forward Stepwise 9-Fold CV')
+```
+
+p = 50, p = 100, p = 150, and p = 200 seem to be where local minimums congregate in the runs.
+
+### Cross Validation RMSE
+
+```{r message=FALSE, warning=FALSE}
+best_p <- linreg_cv_p2$bestTune[[1]]
+
+set.seed(2)
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 10,
+  returnResamp = 'all'
+)
+
+grid <- expand.grid(nvmax = c(50, 100, 150, 200, best_p))
+
+linreg_cv_rmse2 <- train(
+  rec,
+  data = train_ref,
+  method = 'leapForward',
+  trControl = ctrl,
+  tuneGrid = grid,
+  metric = 'RMSE'
+)
+```
+
+```{r}
+df <- linreg_cv_rmse2$resample %>%
+  mutate(rep = str_split_i(Resample, '\\.', 2)) %>%
+  group_by(rep, nvmax) %>%
+  summarise(mean_rmse = mean(RMSE))
+
+ggplot(df, aes(x = factor(nvmax), y = mean_rmse)) +
+  geom_boxplot() + 
+  labs(x = 'Number of Predictors', title = 'Distributions of CV RMSE by Predictor Count')
+
+linreg_cv_rmse_stats2 <- df %>%
+  group_by(nvmax) %>%
+  summarise(
+    mean_RMSE = mean(mean_rmse),
+    med_RMSE = median(mean_rmse),
+    sd_RMSE = sd(mean_rmse),
+    IQR_RMSE = IQR(mean_rmse)
+    )
+linreg_cv_rmse_stats2
+```
+
+Caret determined p = 164 to be the best, though p = 100 is preferable due to superior stability.  Overall performance is pretty similar to, though slightly worse than the first linear regression model.  However, 
+
+# Ridge Regression
+```{r}
+# Not working fix later
+x <- model.matrix(SalePrice ~ ., data = train_form)
+ctrl <- trainControl(method = "cv", number = 10)
+
+ridge <- train(
+  x[, -1], train_form$SalePrice,
+  method = "glmnet",
+  trControl = ctrl,
+  tuneGrid = expand.grid(alpha = 0, lambda = rr_cv$lambda.min)
+)
+
+ridge_model$resample
+```
+
+```{r}
+rr <- glmnet(x[, -1], train_form$SalePrice, alpha = 0, lambda = best_lambda)
+
+```
 
