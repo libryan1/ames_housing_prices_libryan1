@@ -1239,7 +1239,8 @@ linreg_ref <- train(
   method = 'leapForward',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1257,7 +1258,7 @@ ggplot(df, aes(x = nvmax, y = mean_RMSE)) +
 linreg_ref$bestTune
 ```
 
-Caret determined p = 1 to be the best. Around p = 75, p = 100, and p = 150 seem like local minimums, and reasonable values for the optimal number of predictors.
+Caret determined p = 165 to be the best. Around p = 75, p = 100, and p = 150 seem like local minimums, and reasonable values for the optimal number of predictors.
 
 ### Cross Validation RMSE
 
@@ -1275,7 +1276,7 @@ ctrl <- trainControl(
   summaryFunction = f_raw_RMSE
 )
 
-grid <- expand.grid(nvmax = c(1, 75, 100, 150))
+grid <- expand.grid(nvmax = c(75, 100, 150, 165))
 
 linreg_rmse_ref <- train(
   rec,
@@ -1315,7 +1316,7 @@ linreg_rmse_ref_stats
 ```
 
 
-P = 150 is the best. Proceed with that value.
+P = 165 is the best.Though 150 was similar it was more variable.
 
 ### Model Diagnostics
 
@@ -1330,10 +1331,10 @@ fit <- regsubsets(
   SalePrice ~ .,
   data = lm_df,
   method = 'forward',
-  nvmax = 175
+  nvmax = 165
 )
 
-preds <- names(coef(fit, id = 150))[-1]
+preds <- names(coef(fit, id = 165))[-1]
 
 eq_ref <- reformulate(
   termlabels = preds,
@@ -1512,7 +1513,8 @@ ridge_ref <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1561,7 +1563,8 @@ ridge_ref2 <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1600,7 +1603,8 @@ ridge_ref3 <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1620,7 +1624,7 @@ ggplot(df, aes(x = lambda, y = mean_RMSE)) +
 ridge_ref3$bestTune
 ```
 
-Caret determined 0.1 to be the best value for lambda. It seems that any value below around 0.03 minimizes RMSE, with no further decreases afterwards. Proceed with lambda = 0.025
+Caret determined 0.3131 to be the best value for lambda. It seems that any value below around 0.03 minimizes RMSE, with no further decreases afterwards. Proceed with lambda = 0.03
 
 #### Cross Validation RMSE
 
@@ -1637,7 +1641,7 @@ ctrl <- trainControl(
   summaryFunction = f_raw_RMSE
 )
 
-grid <- expand.grid(alpha = 0, lambda = .025)
+grid <- expand.grid(alpha = 0, lambda = .03)
 
 ridge_rmse_ref <- train(
   rec,
@@ -1645,7 +1649,8 @@ ridge_rmse_ref <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1793,7 +1798,8 @@ lasso_ref <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1835,7 +1841,8 @@ lasso_ref2 <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -1869,7 +1876,7 @@ ggplot(df, aes(x = lambda, y = mean_RMSE)) +
 lasso_ref2$bestTune
 ```
 
-Caret determined 0.00002 to be the best lambda value. Around 0.0005 seems to be ideal.
+Caret determined 0.0007 to be the best lambda value. That value seems reasonable.
 
 #### Cross Validation RMSE
 
@@ -1886,7 +1893,7 @@ ctrl <- trainControl(
   summaryFunction = f_raw_RMSE
 )
 
-grid <- expand.grid(alpha = 1, lambda = .0005)
+grid <- expand.grid(alpha = 1, lambda = .0007)
 
 lasso_rmse_ref <- train(
   rec,
@@ -2081,7 +2088,8 @@ elastic_ref <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2121,7 +2129,8 @@ elastic_ref2 <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2167,7 +2176,8 @@ elastic_rmse_ref <- train(
   method = 'glmnet',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2312,7 +2322,8 @@ knn_ref <- caret::train(
   method = 'knn',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2332,7 +2343,7 @@ ggplot(df, aes(x = k, y = mean_RMSE)) +
 knn_ref$bestTune
 ```
 
-Caret determined 50 to be the best value for K. From the graphs a value of around 5-10 seems ideal. Proceed with 8 which seems to be a reasonable middle value.
+Caret determined 6 to be the best value for K. From the graphs a value of around 5-10 seems ideal. Proceed with 8 which seems to be a reasonable middle value.
 
 ### Cross Validation RMSE
 
@@ -2358,7 +2369,8 @@ knn_rmse_ref <- caret::train(
   method = 'knn',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2492,10 +2504,10 @@ sapply(df_ref[num_vars_ref], function(x) {
 })
 ```
 
-As with the formatted data, only the variables with large amount of levels will be smoothed. OverallQual, OverallCond, BsmtFullBath, BsmtHalfBath, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, Fireplaces, GarageCars, X3SsnPorch, PoolArea, and MiscVal probably don't have too complex a relationship with SalePrice and aren't worth smoothing.
+As with the formatted data, only the variables with large amount of levels will be smoothed. OverallQual, OverallCond, LowQualFinSF, BsmtFullBath, BsmtHalfBath, FullBath, HalfBath, BedroomAbvGr, KitchenAbvGr, Fireplaces, X3SsnPorch, PoolArea, and MiscVal probably don't have too complex a relationship with SalePrice and aren't worth smoothing.
 
 ```{r}
-smooth_vars_ref <- num_vars_ref[!(num_vars_ref %in% c('OverallQual', 'OverallCond', 'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'Fireplaces', 'GarageCars', 'X3SsnPorch', 'PoolArea', 'MiscVal'))]
+smooth_vars_ref <- num_vars_ref[!(num_vars_ref %in% c('OverallQual', 'OverallCond', 'LowQualFinSF', 'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'Fireplaces', 'GarageCars', 'X3SsnPorch', 'PoolArea', 'MiscVal'))]
 other_vars_ref <- names(df_ref)[!(names(df_ref) %in% smooth_vars_ref)] 
 other_vars_ref <- other_vars_ref[other_vars_ref != 'SalePrice']
 
@@ -2581,7 +2593,7 @@ df <- regtree_form$resample %>%
 ggplot(df, aes(x = cp, y = mean_RMSE)) + 
   geom_line() +
   facet_grid(.~rep) +
-  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Formatted Data) by CP')
+  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Formatted Data) CV RMSE by CP')
 ```
 
 Let's restrict CP to below 0.01
@@ -2619,7 +2631,7 @@ df <- regtree_form2$resample %>%
 ggplot(df, aes(x = cp, y = mean_RMSE)) + 
   geom_line() +
   facet_grid(.~rep) +
-  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Formatted Data) by CP')
+  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Formatted Data) CV RMSE by CP')
 ```
 
 Let's restrict CP again to below 0.001
@@ -2657,7 +2669,7 @@ df <- regtree_form3$resample %>%
 ggplot(df, aes(x = cp, y = mean_RMSE)) + 
   geom_line() +
   facet_grid(.~rep) +
-  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Formatted Data) by CP') +
+  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Formatted Data) CV RMSE by CP') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
@@ -2736,7 +2748,8 @@ regtree_ref <- train(
   method = 'rpart',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2749,7 +2762,7 @@ df <- regtree_ref$resample %>%
 ggplot(df, aes(x = cp, y = mean_RMSE)) + 
   geom_line() +
   facet_grid(.~rep) +
-  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Refined Data) by CP')
+  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Refined Data) CV RMSE by CP')
 ```
 
 Let's restrict CP to below 0.01
@@ -2775,7 +2788,8 @@ regtree_ref2 <- train(
   method = 'rpart',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2788,7 +2802,7 @@ df <- regtree_ref2$resample %>%
 ggplot(df, aes(x = cp, y = mean_RMSE)) + 
   geom_line() +
   facet_grid(.~rep) +
-  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Refined Data) by CP')
+  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Refined Data) CV RMSE by CP')
 ```
 
 Further restrict it to below 10^-3
@@ -2814,7 +2828,8 @@ regtree_ref3 <- train(
   method = 'rpart',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -2827,14 +2842,14 @@ df <- regtree_ref3$resample %>%
 ggplot(df, aes(x = cp, y = mean_RMSE)) + 
   geom_line() +
   facet_grid(.~rep) +
-  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Refined Data) by CP')
+  labs(x = 'Complexity Parameter', y = 'RMSE', title = 'Reg Tree (Refined Data) CV RMSE by CP')
 ```
 
 ```{r}
 regtree_ref3$bestTune
 ```
 
-In one iteration, cp ~ 0.0025 was the best. However, most models had better performances at lower cp values. Caret determined cp = 0.001 to be optimal. It would seem that any value below 0.0015 would be at about the minimum of CV RMSE. Proceed with cp = 0.001
+It would seem that any value below 0.00025 would be at about the minimum of CV RMSE. Proceed with cp = 0.0001
 
 #### Cross Validation RMSE
 
@@ -2859,7 +2874,8 @@ regtree_rmse_ref <- train(
   method = 'rpart',
   trControl = ctrl,
   tuneGrid = grid,
-  metric = 'raw_RMSE'
+  metric = 'raw_RMSE',
+  maximize = FALSE
 )
 ```
 
@@ -3010,7 +3026,7 @@ df <- rbind(rf_form$resample)
 
 ggplot(df, aes(x = factor(mtry), y = RMSE)) + 
   geom_boxplot() + 
-  labs(title = 'Cross Validation RMSE by Varying mtry Values', x = 'mtry')
+  labs(title = 'Random Forest (Formatted Data) CV RMSE by mtry', x = 'mtry')
 
 rf_form$bestTune
 ```
@@ -3102,7 +3118,7 @@ rf_ref <- train(
 ```{r}
 ggplot(rf_ref$resample, aes(x = factor(mtry), y = raw_RMSE)) + 
   geom_boxplot() + 
-  labs(title = 'Cross Validation RMSE by Varying mtry Values', x = 'mtry', y = 'RMSE')
+  labs(title = 'Randfom Forest (Refined Data) CV RMSE by Varying mtry Values', x = 'mtry', y = 'RMSE')
 
 rf_ref$bestTune
 ```
@@ -3222,65 +3238,32 @@ boost_form_stats <- data.frame(
   colsample_bytree = form_colsamples,
   min_child_weight = form_min_weights
 )
-boost_form_stats[order(boost_form_stats$rmse), ]
-```
-
-To narrow down ideal parameter values, we look at which parameter values are most common among the boosted models with the best RMSE values. This was determined by limiting the values to only those within 1 standard deviation or 1 IQR of the minimum.
-
-```{r}
-boost_form_win_1sd <- subset(boost_form_stats, rmse <= min(boost_form_stats$rmse) + sd(boost_form_stats$rmse))
-boost_form_win_1iqr <- subset(boost_form_stats, rmse <= min(boost_form_stats$rmse) + IQR(boost_form_stats$rmse))
 ```
 
 ```{r}
-i_vec <- c(2,3,4,5)
-rm_i <- 1
-for (i1 in 2:5) {
-  i_vec <- i_vec[-rm_i]
-  for (i2 in i_vec) {
-    tab_name_sd <- paste('Models w/in 1 SD of Min.,', names(boost_form_stats)[i1], 'vs', names(boost_form_stats)[i2])
-    tab_name_iqr <- paste('Models w/in 1 IQR of Min.,', names(boost_form_stats)[i1], 'vs', names(boost_form_stats)[i2])
-    
-    tab_sd <- as.data.frame.matrix(
-      addmargins(table(boost_form_win_1sd[, i1], boost_form_win_1sd[, i2]))
-    )
-    tab_sd <- gt(tab_sd, rownames_to_stub = TRUE) %>%
-      tab_header(title = tab_name_sd) %>%
-      tab_stubhead(label = names(boost_form_stats)[i1]) %>%
-      tab_spanner(
-        label = names(boost_form_stats)[i2],
-        columns = everything()
-      )
-    
-    tab_iqr <- as.data.frame.matrix(
-      addmargins(table(boost_form_win_1iqr[, i1], boost_form_win_1iqr[, i2]))
-    )
-    tab_iqr <- gt(tab_iqr, rownames_to_stub = TRUE) %>%
-      tab_header(title = tab_name_iqr) %>%
-      tab_stubhead(label = names(boost_form_stats)[i1]) %>%
-      tab_spanner(
-        label = names(boost_form_stats)[i2],
-        columns = everything()
-      )
-    print(tab_sd)
-    print(tab_iqr)
-  }
-}
+df <- boost_form_stats
+df$min_child_weight <- factor(df$min_child_weight)
+names(df) <- c('RMSE', 'Max Depth', 'Subsample', 'Colsample By Tree', 'Min Child Weight')
+
+ggplot(df, aes(x = Subsample, y = RMSE, color = `Colsample By Tree`, shape = `Min Child Weight`)) +
+  facet_grid(.~factor(`Max Depth`)) +
+  geom_point() +
+  labs(title = "Boosting (Formatted Data) CV RMSE by Tuning Parameters")
 ```
 
-The most dominant parameter (most common among the models with RMSE within 1 sd of the minimum) was either max_depth = 5 min_child_weight = 20, both at 10/19
-
-When looking at the most dominant parameter given the previous parameter was either max_depth = 5 or min_child_weight = 20. With max_depth = 5 it was min_child_weight = 20, at 5/10 for models within 1 sd of the minimum and 9/16 for models within 1 IQR of the minimum. For min_child_weight = 20, it was subsample = 0.5 with 6/10 for models within 1 sd of the minimum and 11/19 for models within 1 IQR of the minimum. Proceed with min_child_weight = 20 and subsample = 0.5.
-
-For subsample = 0.5, max_depth = 5 was the most dominant for models within 1 sd of the minimum, though it evened out when taking into account models within 1 IQR of the minimum. For min_child_weight = 20, max_depth = 4 and max_depth = 5 were very similar, though 5 edged 4 out slightly. Proceed with max_depth = 5.
-
-At max_depth = 5, colsample_bytree = 0.25 and colsample_bytree = 0.5 were about equivalent for models within 1 sd of the minimum, though solsample_bytree = 0.5 pulled ahead slightly when models within 1 IQR of the minimum were added. FOr subsample = 0.5, 0.75 slightly edged 0.25 out for models within 1 sd of the minimum, though including models within 1 IQR of the minimum all parameter values were about equal. For min_child_weight = 20, 0.25, 0.5, and 0.75 were about equivalent with 0.75 being the most dominant for models within 1 sd of the minimum, and it and 0.5 pulled slightly ahead once models within 1 IQR of the minimum were also taking into account. Proceed with colsample_bytree = 0.5.
+It would seem that max_depth values of either 4 or 5 are the best. For min_child_weight, 20 seems to produce lower RMSE values. Subsample and colsample_bytree values appear to vary somewhat, but colsample_bytree = 0.25 and subsample = 0.5 seem to produce good results. Proceed with max_depth = 4, min_child_Weight = 20, subsample = 0.5, colsample_bytree = 0.25
 
 #### Cross Validation RMSE
 
 10 iterations of 10 fold cross validation.
 
 ```{r}
+mod_mat <- model.matrix(SalePrice ~ . - 1, data = train_form)
+dmat_form <- xgb.DMatrix(
+  data = mod_mat,
+  label = train_form$SalePrice
+)
+
 boost_rmses_form <- rep(0, 10)
 boost_rmses_form_rounds <- rep(0, 10)
 
@@ -3291,11 +3274,11 @@ seeds <- c(6986, 5592, 4514, 5248, 5399, 6841, 1960, 1998, 6757, 2073)
     objective = 'reg:squarederror',
     eval_metric = 'rmse',
     eta = .1,
-    max_depth = 5,
+    max_depth = 4,
     min_child_weight = 20,
     gamma = 0,
     subsample = .5,
-    colsample_bytree = .5,
+    colsample_bytree = .25,
     seed = seeds[i]
   )
   boost_rmse <- xgb.cv(
@@ -3309,7 +3292,6 @@ seeds <- c(6986, 5592, 4514, 5248, 5399, 6841, 1960, 1998, 6757, 2073)
   boost_rmses_form[i] <- boost_rmse$early_stop$best_score
   boost_rmses_form_rounds[i] <- boost_rmse$early_stop$best_iteration
 }
-
 ```
 
 ```{r}
@@ -3409,65 +3391,32 @@ boost_ref_stats <- data.frame(
   colsample_bytree = ref_colsamples,
   min_child_weight = ref_min_weights
 )
-boost_ref_stats[order(boost_ref_stats$rmse), ]
 ```
 
 ```{r}
-boost_ref_win_1sd <- subset(boost_ref_stats, rmse <= min(boost_ref_stats$rmse) + sd(boost_ref_stats$rmse))
-boost_ref_win_1iqr <- subset(boost_ref_stats, rmse <= min(boost_ref_stats$rmse) + IQR(boost_ref_stats$rmse))
+df <- boost_ref_stats
+df$min_child_weight <- factor(df$min_child_weight)
+names(df) <- c('RMSE', 'Max Depth', 'Subsample', 'Colsample By Tree', 'Min Child Weight')
+
+ggplot(df, aes(x = Subsample, y = RMSE, color = `Colsample By Tree`, shape = `Min Child Weight`)) +
+  facet_grid(.~factor(`Max Depth`)) +
+  geom_point() +
+  labs(title = "Boosting (Refined Data) CV RMSE by Tuning Parameters")
 ```
 
-```{r}
-i_vec <- c(2,3,4,5)
-rm_i <- 1
-for (i1 in 2:5) {
-  i_vec <- i_vec[-rm_i]
-  for (i2 in i_vec) {
-    tab_name_sd <- paste('Models w/in 1 SD of Min.,', names(boost_ref_stats)[i1], 'vs', names(boost_ref_stats)[i2])
-    tab_name_iqr <- paste('Models w/in 1 IQR of Min.,', names(boost_ref_stats)[i1], 'vs', names(boost_ref_stats)[i2])
-    
-    tab_sd <- as.data.frame.matrix(
-      addmargins(table(boost_ref_win_1sd[, i1], boost_ref_win_1sd[, i2]))
-    )
-    tab_sd <- gt(tab_sd, rownames_to_stub = TRUE) %>%
-      tab_header(title = tab_name_sd) %>%
-      tab_stubhead(label = names(boost_ref_stats)[i1]) %>%
-      tab_spanner(
-        label = names(boost_ref_stats)[i2],
-        columns = everything()
-      )
-    
-    tab_iqr <- as.data.frame.matrix(
-      addmargins(table(boost_ref_win_1iqr[, i1], boost_ref_win_1iqr[, i2]))
-    )
-    tab_iqr <- gt(tab_iqr, rownames_to_stub = TRUE) %>%
-      tab_header(title = tab_name_iqr) %>%
-      tab_stubhead(label = names(boost_ref_stats)[i1]) %>%
-      tab_spanner(
-        label = names(boost_ref_stats)[i2],
-        columns = everything()
-      )
-    print(tab_sd)
-    print(tab_iqr)
-  }
-}
-```
-
-Max_depth = 3, subsample = 0.5, and min_child_weight = 20 were similarly dominant for models within 1 sd of the minimum, at 8/11, 9/11, and 8/11 respectively. For models within 1 IQR of the minimum, max_depth = 3 had 17/30, subsample = 0.5 had 16/30, and min_child_weight had 17/30. 
-
-For models with max_depth = 3, 6/8 within 1 sd and 9/17 within 1 IQR of the minimum models had subsample = 0.5. 5/8 within 1 sd and 9/16 within 1 IQR of the minimum models had min_child_weight = 20. 
-
-For models with subsample = 0.5, 6/9 within 1 sd and 8/16 within 1 IQR of the minimum models had min_child_weight = 20.
-
-Thus the combination of max_depth = 3, subsample = 0.5, and min_child_Weight = 20 seems quite dominant. Proceed with those values.
-
-For max_depth = 3, colsample_bytree = 0.25 at 4/8 within 1 sd and 8/17 within 1 IQR of the minimum was the most dominant. For subsample = 0.5, colsample_bytree = 0.25 was dominant at  with 5/9 within 1 sd and 8/16 within 1 IQR of the minimum. For min_child_weight = 20, colsample_bytree also performed quite well, with 4/8 within 1 sd and 7/14 within 1 IQR of the minimum. Proceed with colsample_bytree = 0.25
+3 is the best max_depth. colsample_bytree values of 0.25 seemed to perform the best. min_child_weight of 20 seems to perform well. subsample = 0.5 seems to berform the best for all max_depth measurements.
 
 #### Cross Validation RMSE
 
 10 iterations of 10 fold cross validation.
 
 ```{r}
+mod_mat <- model.matrix(SalePrice ~ . - 1, data = train_ref)
+dmat_ref <- xgb.DMatrix(
+  data = mod_mat,
+  label = train_ref$SalePrice
+)
+
 boost_rmses_ref <- rep(0, 10)
 boost_ref_rounds <- rep(0, 10)
 seeds <- c(1693, 4490, 8680, 3100, 2680, 2141, 1720, 8130, 3500, 2324)
@@ -3517,7 +3466,7 @@ boost_rmses_ref_stats <- df %>%
 boost_rmses_ref_stats
 ```
 
-# Conclusion
+# Final Model Determination
 
 ## Model Comparison and Selection
 
@@ -3618,11 +3567,9 @@ ggplot(subset(best_models_df, Model %in% c('Ridge Ref', 'LASSO Ref', 'Elastic Re
 
 Proceed with ridge regression on the refined data.
 
-## Final Results
+## Prepare Testing Data
 
-### Prepare Testing Data
-
-#### Data Cleaning
+### Data Cleaning
 
 ```{r}
 test <- read.csv('Data/test.csv')
@@ -3716,7 +3663,7 @@ sapply(names(test_clean), function(col_name) {
 })
 ```
 
-#### Data Formatting
+### Data Formatting
 
 ```{r}
 test_form <- test_clean %>%
@@ -3979,7 +3926,7 @@ setdiff(colnames(mod_mat_train_final), colnames(mod_mat_test_final))
 setdiff(colnames(mod_mat_test_final), colnames(mod_mat_train_final))
 ```
 
-### Results
+## Final Model Predictions
 
 ```{r}
 final_preds <- predict(ridge_rmse_ref, newdata = test_ref)
@@ -3993,3 +3940,124 @@ final_preds_df <- data.frame(
 names(final_preds_df) <- c('Id', 'SalePrice')
 write.csv(final_preds_df, 'final_test_preds.csv', row.names = FALSE)
 ```
+
+## Other Top Model Predictions
+
+### LASSO
+
+```{r}
+lasso_preds <- predict(lasso_rmse_ref, newdata = test_ref)
+lasso_preds_df <- data.frame(
+  Id = test$Id,
+  SalePrice = exp(lasso_preds)
+)
+names(lasso_preds_df) <- c('Id', 'SalePrice')
+write.csv(lasso_preds_df, 'lasso_preds_df.csv', row.names = FALSE)
+```
+
+### Elastic Net
+
+```{r}
+elastic_preds <- predict(elastic_rmse_ref, newdata = test_ref)
+elastic_preds_df <- data.frame(
+  Id = test$Id,
+  SalePrice = exp(elastic_preds)
+)
+names(elastic_preds_df) <- c('Id', 'SalePrice')
+write.csv(elastic_preds_df, 'elastic_preds_df.csv', row.names = FALSE)
+```
+
+### Boosting
+
+#### Rounds Selection via Cross Validation
+
+```{r}
+dmat_train_ref <- xgb.DMatrix(
+  data = mod_mat_train_final,
+  label = train_ref$SalePrice
+)
+
+best_rounds <- rep(0, 10)
+scores <- rep(0, 10)
+seeds <- c(1043, 3316, 7364, 1050, 2400, 6571, 4174, 6447, 2555, 7326)
+for (i in 1:10) {
+  set.seed(seeds[i])
+  params <- list(
+    objective = "reg:squarederror",
+    eta = .1,
+    max_depth = 3,
+    min_child_weight = 20,
+    gamma = 0,
+    subsample = .5,
+    colsample_bytree = .25,
+    seed = seeds[i]
+  )
+  boost_rmse_ref <- xgb.cv(
+    params = params,
+    data = dmat_train_ref,
+    nrounds = 2000,
+    nfold = 10,
+    custom_metric = f_boost_raw_RMSE,
+    maximize = FALSE,
+    early_stopping_rounds = 50,
+    verbose = FALSE
+  )
+  best_rounds[i] <- boost_rmse_ref$early_stop$best_iteration
+  scores[i] <- boost_rmse_ref$early_stop$best_score
+}
+```
+
+```{r}
+tab_boost_rounds <- data.frame(
+  rounds = best_rounds,
+  RMSE = scores
+)
+tab_boost_rounds[order(tab_boost_rounds$RMSE),]
+mean(best_rounds)
+median(best_rounds)
+```
+
+Most of the best performing boost models had higher rounds. Proceeding with 180 is reasonable.
+
+#### Get Predictions
+
+```{r}
+dmat_train_ref <- xgb.DMatrix(
+  data = mod_mat_train_final,
+  label = train_ref$SalePrice
+)
+
+params <- list(
+    objective = "reg:squarederror",
+    eta = .1,
+    max_depth = 3,
+    min_child_weight = 20,
+    gamma = 0,
+    subsample = .5,
+    colsample_bytree = .25
+  )
+
+final_boost_model <- xgb.train(
+  params = params,
+  data = dmat_train_ref,
+  nrounds = 180,
+  custom_metric = f_boost_raw_RMSE,
+  maximize = FALSE,
+  verbose = FALSE
+)
+```
+
+```{r}
+dmat_test_ref <- xgb.DMatrix(
+  data = mod_mat_test_final,
+  label = test_ref$SalePrice
+)
+boost_preds <- predict(final_boost_model, dmat_test_ref)
+boost_preds_df <- data.frame(
+  Id = test$Id,
+  SalePrice = exp(boost_preds)
+)
+names(boost_preds_df) <- c('Id', 'SalePrice')
+write.csv(boost_preds_df, 'boost_preds_df.csv', row.names = FALSE)
+```
+
