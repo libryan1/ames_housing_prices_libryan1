@@ -3,10 +3,15 @@ title: "Ames Housing Prices Project Report"
 author: "Bryan Li"
 format:
   html:
-      toc: true
-      toc-location: left
-      toc-depth: 3
-      embed-resources: true
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    embed-resources: true
+  pdf:
+    toc: true
+    toc-depth: 3
+    colorlinks: true
+    linkcolor: blue
 editor: source
 ---
 
