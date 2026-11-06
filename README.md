@@ -1,3 +1,5 @@
+**[Read the Full Report (PDF)](https://github.com/libryan1/ames_housing_prices_libryan1/blob/main/ames_housing_prices_report.pdf)**
+
 # Overview
 This project is based on Kaggle's [House Prices - Advanced Regression Techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques) competition. The objective is to predict the sale price of a house using its characteristics. Two datasets are provided, the training data and the testing data. Only the training data has the actual sale prices of the houses included. Models are created using the training data, and made to predict the prices of the houses in the testing data. The predicted prices are then submitted to Kaggle, which returns the root mean square logarithmic error (RMSLE) of the predictions. 
 
@@ -12,22 +14,26 @@ Though smoothing splines on the refined data could outperform ridge regression o
 While ridge regression on the refined data achieved the best cross-validation performance, 3 other models achieved similar results. All were built on the refined data. They were the LASSO, elastic net, and boosting models. Their predictions on the testing data were also submitted to Kaggle, achieving RMSLE's of 0.1291, 0.1289, and 0.1295 respectively. In addition, it can be seen that using the refined data greatly improved the performance of OLS regression and shrinkage models. This suggests two things. One, that the issues identified in the training data likely did exist and were, to a degree, successfully addressed by the transformations. Two, that through appropriate data transformations, relatively simple linear models can achieve predictive accuracy comparable to more flexible nonlinear approaches to this problem.
 
 # Repository Contents
-`ames_housing_prices_report.pdf`: PDF version of the report readable on GitHub
+## Reports
+[`ames_housing_prices_report.pdf`](https://github.com/libryan1/ames_housing_prices_libryan1/blob/main/ames_housing_prices_report.pdf): Full report, viewable on GitHub
 
-`ames_housing_prices_report.html`: HTML version of the report, download only
+[`ames_housing_prices_report.html`](https://github.com/libryan1/ames_housing_prices_libryan1/blob/main/ames_housing_prices_report.html): Full report, HTML version, download only
 
-`ames_housing_prices_report.qmd`: Quarto document that created the PDF and HTML versions of the report
+[`ames_housing_prices_report.qmd`](https://github.com/libryan1/ames_housing_prices_libryan1/blob/main/ames_housing_prices_report.qmd): Source document for both report formats
 
-`\Figures`: Folder containing all images used by the report
+## Code
+[`\Code\ames_housing_prices.qmd`](https://github.com/libryan1/ames_housing_prices_libryan1/blob/main/Code/ames_housing_prices.qmd): Quarto document containing all statistical analyses
 
-`\Code\ames_housing_prices.qmd`: Quarto document containing all statistical analyses
+`Code\final_test_preds.csv`: Ridge regression predictions
 
-`Code\final_test_preds.csv`: Predictions made by the final ridge regression model built on the refined data that were submitted to Kaggle
+`Code\lasso_preds_df.csv`: LASSO predictions
 
-`Code\lasso_preds_df.csv`: Predictions submitted to Kaggle  made by the final LASSO model built on the refined data
+`Code\elastic_preds_df.csv`: Elastic net predictions
 
-`Code\elastic_preds_df.csv`: Predictions submitted to Kaggle made by the final elastic net model built on the refined data
+`Code\boost_preds_df.csv`: Boosting predictions
 
-`Code\boost_preds_df.csv`: Predictions submitted to Kaggle made by the final boosting model built on the refined data
+## Other Files
 
-`Code\Data`: Folder containing the training and testing data provided by Kaggle, as well as the saved CV RMSE numbers for each model assessed
+`\Figures`: Figures used in the report.
+
+`Code\Data`: Kaggle datasets and saved cross-validation results
