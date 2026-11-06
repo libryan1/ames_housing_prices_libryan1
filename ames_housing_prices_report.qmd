@@ -21,7 +21,7 @@ This project is based on the [House Prices - Advanced Regression Techniques](htt
 
 During the course of the analysis, two versions of the data were considered. The "formatted data", which makes no changes to the numeric variables, and the "refined data" which removed 3 numeric variables, log-transformed 4 numeric variables and the response variable, and removed a high-leverage point.
 
-4 models achieved similarly good cross-validation performance. All were trained on the refined data. They were a ridge regression model with tuning parameter $\lambda$ = 0.03; LASSO model with tuning parameter $\lambda$ = 0.0007; elastic net model with parameter values of $\alpha$ = 0.05 and $\lambda$ = 0.02; and a boosting model with tuning parameters $\eta$ = 0.1, $nroudns = 180, $max\_depth$ = 3, $colsample\_bytree$ = 0.25, $min\_child\_weight$ = 20, and $subsample$ = 0.25. The model with the best cross-validation performance was the ridge regression model, which achieved a root mean squared logarithmic error (RMSLE) of 0.1294 in the Kaggle competition. The LASSO, elastic net, and boosting models achieved RMSLE values of 0.1291, 0.1289, and 0.1295 respectively. From these results we can conclude that the refined data did improve the linearity of the data, and furthermore, that linear models can perform similarly to non-linear models through transformation of the data.
+The models were evaluated on root mean square error. 4 models achieved similarly good cross-validation performance. All were trained on the refined data. They were a ridge regression model with tuning parameter $\lambda$ = 0.03; LASSO model with tuning parameter $\lambda$ = 0.0007; elastic net model with parameter values of $\alpha$ = 0.05 and $\lambda$ = 0.02; and a boosting model with tuning parameters $\eta$ = 0.1, $nrounds$ = 180, $max\_depth$ = 3, $colsample\_bytree$ = 0.25, $min\_child\_weight$ = 20, and $subsample$ = 0.25. The model with the best cross-validation performance was the ridge regression model, which achieved a root mean squared logarithmic error (RMSLE) of 0.1294 in the Kaggle competition. The LASSO, elastic net, and boosting models achieved RMSLE values of 0.1291, 0.1289, and 0.1295 respectively. From these results we can conclude that the refined data did improve the linearity of the data, and furthermore, that linear models can perform similarly to non-linear models through transformation of the data.
 
 # Introduction
 
@@ -220,7 +220,7 @@ Only one high-leverage point exists in the training data, the house with index o
 
 ##### Muticollinearity Analysis
 
-The correlation between every pair of predictors in the data was computed
+The correlation between every pair of predictors in the data was computed.
 
 ![Correlation Heatmap (Formatted Data)](Figures/form_cor_heat.png)
 
@@ -630,6 +630,6 @@ The ridge regression model on the refined data was selected as the best performi
 
 # Discussion
 
-The LASSO, elastic net, and boosting models on the refined data also had their predictions submitted to the Kaggle competition. In order to fit a boosting model that can be used for prediction, $nrounds$ needed to be determined. This was done via cross validation, with $nrounds$ = 180 determined to be a reasonble parameter value.. This resulted in scores of 0.1291, 0.1289, and 0.1295 respectively. 
+The LASSO, elastic net, and boosting models on the refined data also had their predictions submitted to the Kaggle competition. In order to fit a boosting model that can be used for prediction, $nrounds$ needed to be determined. This was done via cross validation, with $nrounds$ = 180 determined to be a reasonable parameter value. This resulted in scores of 0.1291, 0.1289, and 0.1295 respectively. 
 
 These results all indicate similar performance between the 4 best models. Most interestingly, the boosting model performed very similarly to the shrinkage models, despite being entirely different in concept, with the shrinkage models being parametric and assuming a fundamentally linear relationship between `SalePrice` and the predictors, while boosting is non-parametric and does not make such an assumption. What's more, boosting on the formatted data performed far better than the shrinkage models on the formatted data. This confirms the findings of the linear regression diagnostics, that the numeric predictors did suffer from non-linearity with `SalePrice`, and that the changes made in the creation of the refined data improved on this aspect. Concerning future endeavors, it suggests that while non-linear models can better handle the raw numeric data due to the existence of non-linear relationships, the data can be transformed such that linear models can attain similar performance. 
