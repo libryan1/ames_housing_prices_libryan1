@@ -6,14 +6,19 @@ This project is based on Kaggle's [House Prices - Advanced Regression Techniques
 # Methods
 The analysis was conducted in R. A transformed version of the training data was created, henceforth referred to as the refined data. The same transformations, excepting the removal of any houses, were also performed to create a transformed version of the testing data. These transformations were conducted to address multicollinearity, existence of nonlinear relationships between the response and predictors, and the presence of a high-leverage point. Root mean square error was used as the evaluation metric.  OLS regression, shrinkage, smoothing splines, KNN, and decision-tree based models were created, with their performance evaluated via cross-validation. 
 
-# Results
+# Results and Findings
 ![CV RMSE by Model](Figures/cv_rmse_by_model_graph.png)
 
 Though smoothing splines on the refined data could outperform ridge regression on the refined data, it was deemed too unreliable due to its significantly higher variability, thus ridge regression was selected. It achieved a RMSLE of 0.1294 on Kaggle. 
 
 While ridge regression on the refined data achieved the best cross-validation performance, 3 other models achieved similar results. All were built on the refined data. They were the LASSO, elastic net, and boosting models. Their predictions on the testing data were also submitted to Kaggle, achieving RMSLE's of 0.1291, 0.1289, and 0.1295 respectively. In addition, it can be seen that using the refined data greatly improved the performance of OLS regression and shrinkage models. This suggests two things. One, that the issues identified in the training data likely did exist and were, to a degree, successfully addressed by the transformations. Two, that through appropriate data transformations, relatively simple linear models can achieve predictive accuracy comparable to more flexible nonlinear approaches to this problem.
 
+# Limitations
+
+This project's findings are hampered by computational limitations. While most of the models received 10 rounds of 10-fold cross validation, a few models, due to being computationally expensive, received less than that. Of note are the smoothing splines and boosting models. By receiving less thorough cross-validation than the shrinkage models, their cross validation performance may have been inadvertently penalized with higher variability, making them less attractive. Furthermore, the parameters governing boosting's learning rate and number of trees were either not cross validated for (learning rate) or not cross-validated simultaneously with the other parameters (number of trees), meaning the possibility exists for a more optimal combination of parameters with decisively better performance than the shrinkage models.
+
 # Repository Contents
+
 ## Reports
 [`ames_housing_prices_report.pdf`](https://github.com/libryan1/ames_housing_prices_libryan1/blob/main/ames_housing_prices_report.pdf): Full report, viewable on GitHub
 
