@@ -21,7 +21,7 @@ This project is based on the [House Prices - Advanced Regression Techniques](htt
 
 During the course of the analysis, two versions of the data were considered. The "formatted data", which makes no changes to the numeric variables, and the "refined data" which removed 3 numeric variables, log-transformed 4 numeric variables and the response variable, and removed a high-leverage point.
 
-The models were evaluated on root mean square error. 4 models achieved similarly good cross-validation performance. All were trained on the refined data. They were a ridge regression model with tuning parameter $\lambda$ = 0.03; LASSO model with tuning parameter $\lambda$ = 0.0007; elastic net model with parameter values of $\alpha$ = 0.05 and $\lambda$ = 0.02; and a boosting model with tuning parameters $\eta$ = 0.1, $nrounds$ = 180, $max\_depth$ = 3, $colsample\_bytree$ = 0.25, $min\_child\_weight$ = 20, and $subsample$ = 0.25. The model with the best cross-validation performance was the ridge regression model, which achieved a root mean squared logarithmic error (RMSLE) of 0.1294 in the Kaggle competition. The LASSO, elastic net, and boosting models achieved RMSLE values of 0.1291, 0.1289, and 0.1295 respectively. From these results we can conclude that the refined data did improve the linearity of the data, and furthermore, that linear models can perform similarly to non-linear models through transformation of the data.
+The models were evaluated on root mean square error. 4 models achieved similarly good cross-validation performance. All were trained on the refined data. They were a ridge regression model with tuning parameter $\lambda$ = 0.03; LASSO model with tuning parameter $\lambda$ = 0.0007; elastic net model with parameter values of $\alpha$ = 0.05 and $\lambda$ = 0.02; and a boosting model with tuning parameters $\eta$ = 0.1, $nrounds$ = 180, $max\_depth$ = 3, $colsample\_bytree$ = 0.25, $min\_child\_weight$ = 20, and $subsample$ = 0.25. The model with the best cross-validation performance was the ridge regression model, which achieved a root mean squared logarithmic error (RMSLE) of 0.1294 in the Kaggle competition. The LASSO, elastic net, and boosting models achieved RMSLE values of 0.1291, 0.1289, and 0.1295 respectively. From these results we can conclude that the refined data did improve the suitability of the data for linear models, and furthermore, that simpler, linear models can perform similarly to more complex and flexible models through transformation of the data.
 
 # Introduction
 
@@ -580,7 +580,7 @@ Of the tuning parameters relevant to `xgboost`, only 4 were analyzed in-depth:
 
 For both models trained on the formatted and the refined data:
 
-max_depth was varied between values {3, 4, 5}, subsamples and colsample_bytree between values {0.25, 0.5, 0.75, 1}, and min_child_weight between values {5, 10, 20}.
+$max\_depth$ was varied between values {3, 4, 5}, $subsamples$ and $colsample\_bytree$ between values {0.25, 0.5, 0.75, 1}, and $min\_child\_weight$ between values {5, 10, 20}.
 
 The rest were kept constant:
 
@@ -630,6 +630,12 @@ The ridge regression model on the refined data was selected as the best performi
 
 # Discussion
 
+## Comparison of Best-Performing Models and Interpretation
+
 The LASSO, elastic net, and boosting models on the refined data also had their predictions submitted to the Kaggle competition. In order to fit a boosting model that can be used for prediction, $nrounds$ needed to be determined. This was done via cross validation, with $nrounds$ = 180 determined to be a reasonable parameter value. This resulted in scores of 0.1291, 0.1289, and 0.1295 respectively. 
 
-These results all indicate similar performance between the 4 best models. Most interestingly, the boosting model performed very similarly to the shrinkage models, despite being entirely different in concept, with the shrinkage models being parametric and assuming a fundamentally linear relationship between `SalePrice` and the predictors, while boosting is non-parametric and does not make such an assumption. What's more, boosting on the formatted data performed far better than the shrinkage models on the formatted data. This confirms the findings of the linear regression diagnostics, that the numeric predictors did suffer from non-linearity with `SalePrice`, and that the changes made in the creation of the refined data improved on this aspect. Concerning future endeavors, it suggests that while non-linear models can better handle the raw numeric data due to the existence of non-linear relationships, the data can be transformed such that linear models can attain similar performance. 
+These results all indicate similar performance between the 4 best models. Most interestingly, the boosting model performed very similarly to the shrinkage models, despite being entirely different in concept, with the shrinkage models being parametric and assuming a fundamentally linear relationship between `SalePrice` and the predictors, while boosting is non-parametric and does not make such an assumption. What's more, boosting on the formatted data performed far better than the shrinkage models on the formatted data. This suggests that the alterations made in the creation of the refined data largely accomplished its goal of improving the data from a modeling perspective. Furthermore, it indicates that while more flexible models (such as boosting) are better at handling the raw data, simpler models can achieve similar performance through transformation of the data.
+
+## Limitations
+
+The findings of this report are limited by computational limitations. Not all models received the same amount of cross validation folds and rounds, due to being too expensive computationally. Notably, the smoothing and boosting models. While most models received 10 rounds of 10-fold cross validation, smoothing and boosting received only 5 rounds of 5-fold cross validation and 1 round of 10-fold cross validation respectively. Additionally, the parameters governing boosting's learning rate ($\eta$) and number of trees ($nrounds$) was not cross-validated for simultaneously with $max\_depth$, $subsample$, $colsampe\_bytree$, and $min\_child\_weight$, meaning it is possible that the optimal combination of parameters was missed by cross validation.
